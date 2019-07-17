@@ -134,11 +134,11 @@ function auth0_lite_validate_id_token( $id_token ) {
 	}
 
 	if ( ! $id_token_parsed->getClaim( 'sub' ) ) {
-		auth0_lite_wp_die( __( 'No user ID (sub) found', 'auth0-lite' ) );
+		auth0_lite_wp_die( __( 'ID token missing sub claim', 'auth0-lite' ) );
 	}
 
 	if ( ! $id_token_parsed->getClaim( 'email' ) ) {
-		auth0_lite_wp_die( __( 'No email address returned', 'auth0-lite' ) );
+		auth0_lite_wp_die( __( 'ID token missing email claim', 'auth0-lite' ) );
 	}
 
 	if ( ! $id_token_parsed->getClaim( 'email_verified' ) ) {

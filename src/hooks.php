@@ -26,6 +26,7 @@ function auth0_lite_handle_login_redirect() {
 		return;
 	}
 
+	// Need to pass through logout actions and post password check.
 	$current_action = isset( $_GET['action'] ) ? $_GET['action'] : null;
 	if ( in_array( $current_action, [ 'logout', 'postpass' ] ) ) {
 		return;
@@ -36,8 +37,10 @@ function auth0_lite_handle_login_redirect() {
 		exit;
 	}
 
+	// Generate and store a nonce to validate the ID token on return.
 	$nonce = bin2hex( random_bytes( 32 ) );
 	setcookie( AUTH0_LITE_NONCE_COOKIE, $nonce, time() + HOUR_IN_SECONDS, '/' );
+
 	wp_safe_redirect( auth0_lite_get_authorize_url( $nonce ) );
 	exit;
 }
@@ -88,43 +91,38 @@ function auth0_lite_handle_callback() {
 	}
 
 	$id_token = auth0_lite_validate_id_token( $_POST['id_token'] );
+	$id_token_sub = $id_token->getClaim( 'sub' );
+	$id_token_email = $id_token->getClaim( 'email' );
+	$id_token_exp = $id_token->getClaim( 'exp' );
 
-	$wp_users = auth0_lite_get_user_by_sub( $id_token->getClaim( 'sub' ) );
+	$wp_users = auth0_lite_get_user_by_sub( $id_token_sub );
+
+	// More than one user in the database with the same Auth0 is not a recoverable condition.
 	if ( count( $wp_users ) > 1 ) {
 		auth0_lite_wp_die( __( 'More than 1 user found with this user ID', 'auth0-lite' ) );
 	}
 
-	if ( empty( $wp_users ) ) {
-		$wp_user = auth0_lite_get_or_create_user( $id_token->getClaim( 'email' ), $id_token->getClaim( 'sub' ) );
-	} else {
-		$wp_user = reset( $wp_users );
+	$wp_user = reset( $wp_users );
+
+	if ( ! $wp_user ) {
+		$wp_user = auth0_lite_get_or_create_user( $id_token_email, $id_token_sub );
 	}
 
 	if ( ! $wp_user ) {
 		auth0_lite_wp_die( __( 'Error finding or creating a user', 'auth0-lite' ) );
 	}
 
-	$session_expire = $id_token->getClaim( 'exp' ) - time();
+	// Set the session expiration to the ID token expiration.
 	add_filter(
 		'auth_cookie_expiration',
-		function( $value, $user_id, $remember ) use ( $session_expire ) {
-			return $session_expire;
+		function( $value, $user_id, $remember ) use ( $id_token_exp ) {
+			return $id_token_exp - time();
 		},
 		100,
 		3
 	);
 
-	$secure_cookie = apply_filters(
-		'secure_signon_cookie',
-		is_ssl(),
-		[
-			'user_login'    => $wp_user->user_login,
-			'user_password' => null,
-			'remember'      => false,
-		]
-	);
-
-	wp_set_auth_cookie( $wp_user->ID, false, $secure_cookie );
+	wp_set_auth_cookie( $wp_user->ID, false );
 	wp_safe_redirect( home_url() );
 	exit;
 }
