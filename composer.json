@@ -1,0 +1,14 @@
+{
+    "require": {
+        "lcobucci/jwt": "^3.3"
+    },
+    "require-dev": {
+        "dealerdirect/phpcodesniffer-composer-installer": "^0.4.3",
+        "wp-coding-standards/wpcs": "^1",
+        "phpcompatibility/phpcompatibility-wp": "*"
+    },
+    "scripts": {
+        "phpcs": "\"vendor/bin/phpcs\"",
+        "phpcbf": "\"vendor/bin/phpcbf\""
+    }
+}

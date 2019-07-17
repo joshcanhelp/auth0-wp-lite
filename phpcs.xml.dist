@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<ruleset name="Auth0-Lite" namespace="Auth0Lite\CS\Standard">
+    <description>A custom coding standard for Auth0 Lite</description>
+
+    <file>.</file>
+    <exclude-pattern>/vendor/*</exclude-pattern>
+
+    <!-- Only check PHP files. -->
+    <arg name="extensions" value="php"/>
+
+    <!-- Show progress, show the error codes for each message (source). -->
+    <arg value="sp"/>
+
+    <!-- Strip the filepaths down to the relevant bit. -->
+    <arg name="basepath" value="."/>
+
+    <!-- Show coloured output, if available. -->
+    <arg name="colors"/>
+
+    <!--
+    PHPCompatibility sniffs to check for PHP cross-version incompatible code.
+    https://github.com/PHPCompatibility/PHPCompatibility
+    -->
+    <config name="testVersion" value="7.0"/>
+    <config name="minimum_supported_wp_version" value="5.0"/>
+    <rule ref="PHPCompatibilityWP"/>
+
+    <rule ref="Generic.CodeAnalysis">
+        <exclude name="Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed"/>
+    </rule>
+    <rule ref="Generic.Commenting.Todo"/>
+    <rule ref="Generic.Arrays.DisallowLongArraySyntax.Found"/>
+    <rule ref="PHPCompatibility"/>
+    <rule ref="WordPress-Core">
+        <exclude name="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound"/>
+    </rule>
+    <rule ref="WordPress-Docs"/>
+    <rule ref="WordPress.DB.DirectDatabaseQuery"/>
+    <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+        <properties>
+            <property name="prefixes" type="array" value="auth0_lite" />
+        </properties>
+    </rule>
+    <rule ref="WordPress.WP.I18n">
+        <properties>
+            <property name="text_domain" type="array" value="auth0-lite" />
+        </properties>
+    </rule>
+</ruleset>
